@@ -1,1 +1,3 @@
 discord.py
+spotipy
+google-api-python-client
