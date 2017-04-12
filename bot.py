@@ -5,7 +5,7 @@ import json
 
 
 description = '''A music bot'''
-bot = commands.Bot(command_prefix='?', description=description)
+bot = commands.Bot(command_prefix='!', description=description)
 
 
 @bot.event
