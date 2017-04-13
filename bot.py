@@ -19,7 +19,13 @@ async def on_ready():
 @bot.command()
 async def track(*details: str):
     try:
-        hyphen_index = details.index('-')
+        if '-' in details:
+            hyphen_index = details.index('-')
+        elif '–' in details:
+            hyphen_index = details.index('–')
+        else:
+            raise ValueError
+
         if hyphen_index == 0 or hyphen_index == (len(details) - 1):
             raise ValueError
         artist = " ".join(details[:hyphen_index])
@@ -35,10 +41,15 @@ async def track(*details: str):
 
 
 def get_spotify_track(artist: str, name: str):
-    search_str = artist + " " + name
-    sp = spotipy.Spotify()
-    result = sp.search(search_str, 1)
-    return result['tracks']['items'][0]['external_urls']['spotify']
+    try:
+        search_str = artist + " " + name
+        sp = spotipy.Spotify()
+        result = sp.search(search_str, 1)
+        track_url = result['tracks']['items'][0]['external_urls']['spotify']
+    except IndexError:
+        return "No Spotify match found. :("
+
+    return track_url
 
 
 def get_youtube_track(artist: str, name: str):
