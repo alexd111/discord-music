@@ -40,6 +40,21 @@ async def track(*details: str):
     await bot.say(response)
 
 
+@bot.command()
+async def link(url: str):
+    if 'spotify' in url:
+        track_name = get_spotify_track_name_from_url(url)
+        track_name_list = track_name.split(' - ')
+        artist = track_name_list[0]
+        name = track_name_list[1]
+        response = get_youtube_track(artist, name)
+
+    elif ('youtube') in url or ('youtu.be' in url):
+        track_name = get_youtube_track_name_from_url(url)
+        response = search_spotify(track_name)
+    await(bot.say(response))
+
+
 def get_spotify_track(artist: str, name: str):
     try:
         search_str = artist + " " + name
@@ -50,6 +65,55 @@ def get_spotify_track(artist: str, name: str):
         return "No Spotify match found. :("
 
     return track_url
+
+
+def get_spotify_track_name_from_url(url: str):
+    try:
+        url_list = url.split('/')
+        spotify_uri = 'spotify:track:' + url_list[-1]
+        search_str = spotify_uri
+        sp = spotipy.Spotify()
+        result = sp.track(spotify_uri)
+
+        track_name = result['artists'][0]['name'] + ' - ' + result['name']
+    except IndexError:
+        return "No Spotify match found. :("
+
+    return track_name
+
+
+def search_spotify(search: str):
+    try:
+        search_str = search
+        sp = spotipy.Spotify()
+        result = sp.search(search_str, 1)
+        track_url = result['tracks']['items'][0]['external_urls']['spotify']
+    except IndexError:
+        return "No Spotify match found. :("
+
+    return track_url
+
+
+def get_youtube_track_name_from_url(url: str):
+    DEVELOPER_KEY = youtube_token
+    YOUTUBE_API_SERVICE_NAME = "youtube"
+    YOUTUBE_API_VERSION = "v3"
+
+    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=DEVELOPER_KEY)
+
+    search_response = youtube.search().list(
+        q=url,
+        part="id,snippet",
+        maxResults=1
+    ).execute()
+
+    results = []
+
+    for search_result in search_response.get("items", []):
+        if search_result["id"]["kind"] == "youtube#video":
+            results.append(search_result["snippet"]["title"])
+
+    return results[0]
 
 
 def get_youtube_track(artist: str, name: str):
