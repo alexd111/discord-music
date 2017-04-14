@@ -1,5 +1,6 @@
 {
   "BOT_TOKEN": "",
   "SPOTIFY_KEY": "",
-  "YOUTUBE_KEY": ""
+  "YOUTUBE_KEY": "",
+  "LASTFM_KEY": ""
 }
