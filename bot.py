@@ -2,6 +2,8 @@ from discord.ext import commands
 from googleapiclient.discovery import build
 import spotipy
 import json
+import sqlite3
+import requests
 
 
 description = '''A music bot'''
@@ -53,6 +55,39 @@ async def link(url: str):
         track_name = get_youtube_track_name_from_url(url)
         response = search_spotify(track_name)
     await(bot.say(response))
+
+
+@bot.command(pass_context=True)
+async def npset(ctx, *lastfm_id):
+    user_id = ctx.message.author.id
+    lastfm_id = lastfm_id[0]
+
+    update_db(user_id, lastfm_id)
+
+    await(bot.say('Saved your Last.fm user ID as: ' + lastfm_id))
+
+
+@bot.command(pass_context=True)
+async def np(ctx):
+    user_id = ctx.message.author.id
+
+    lastfm_id = get_user_from_db(user_id)
+
+    if lastfm_id is None:
+        await (bot.say('No Last.fm user name found. Use !npset to set your Last.fm user name'))
+        return
+
+    track = get_lastfm_now_playing(lastfm_id)
+
+    if track is None:
+        await (bot.say('No now playing data found for Last.fm user :' + lastfm_id))
+        return
+
+    spotify_url = get_spotify_track(track[0], track[1])
+
+    youtube_url = get_youtube_track(track[0], track[1])
+
+    await (bot.say(spotify_url + '\n' + youtube_url))
 
 
 def get_spotify_track(artist: str, name: str):
@@ -138,11 +173,67 @@ def get_youtube_track(artist: str, name: str):
     return results[0]
 
 
+def get_lastfm_now_playing(lastfm_id):
+    parameters = {
+        'user': lastfm_id,
+        'api_key': lastfm_token,
+        'limit': 1,
+        'format': 'json'
+    }
+
+    r = requests.get('http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks', params=parameters)
+
+    result = r.json()
+
+    if 'error' in result:
+        return None
+
+    artist = result['recenttracks']['track'][0]['artist']['#text']
+    name = result['recenttracks']['track'][0]['name']
+
+    track = (artist, name)
+
+    return track
+
+
+def initialise_db():
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, lastfm_name TEXT)
+    ''')
+    db.commit()
+
+
+def update_db(user_id, lastfm_id):
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+    cursor.execute('''INSERT OR REPLACE INTO users(id, lastfm_name)
+                      VALUES(?,?)''', (user_id, lastfm_id))
+    db.commit()
+
+
+def get_user_from_db(user_id):
+    db = sqlite3.connect('data.db')
+    cursor = db.cursor()
+    cursor.execute('''SELECT * FROM users WHERE id=?
+                          ''', (user_id,))
+    user = cursor.fetchone()
+    if user is None:
+        return None
+    lastfm_id = user[1]
+    return lastfm_id
+
+
 with open('config.json', 'r') as f:
     config = json.load(f)
 
 bot_token = config['BOT_TOKEN']
 
 youtube_token = config['YOUTUBE_KEY']
+
+lastfm_token = config['LASTFM_KEY']
+
+initialise_db()
 
 bot.run(bot_token)
