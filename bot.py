@@ -81,7 +81,31 @@ async def np(ctx):
         await (bot.say('No Last.fm user name found. Use !npset to set your Last.fm user name'))
         return
 
-    track = get_lastfm_now_playing(lastfm_id)
+    track = get_lastfm_now_playing(lastfm_id, 1)
+
+    if track is None:
+        await (bot.say('No now playing data found for Last.fm user :' + lastfm_id))
+        return
+
+    spotify_url = get_spotify_track(track[0], track[1])
+
+    youtube_url = get_youtube_track(track[0], track[1])
+
+    await (bot.say(spotify_url + '\n' + youtube_url))
+
+
+@bot.command(pass_context=True)
+async def nplast(ctx):
+    """Gets second last scrobbled track from Last.fm."""
+    user_id = ctx.message.author.id
+
+    lastfm_id = get_user_from_db(user_id)
+
+    if lastfm_id is None:
+        await (bot.say('No Last.fm user name found. Use !npset to set your Last.fm user name'))
+        return
+
+    track = get_lastfm_now_playing(lastfm_id, 2)
 
     if track is None:
         await (bot.say('No now playing data found for Last.fm user :' + lastfm_id))
@@ -177,11 +201,11 @@ def get_youtube_track(artist: str, name: str):
     return results[0]
 
 
-def get_lastfm_now_playing(lastfm_id):
+def get_lastfm_now_playing(lastfm_id, limit):
     parameters = {
         'user': lastfm_id,
         'api_key': lastfm_token,
-        'limit': 1,
+        'limit': limit,
         'format': 'json'
     }
 
@@ -192,8 +216,8 @@ def get_lastfm_now_playing(lastfm_id):
     if 'error' in result:
         return None
 
-    artist = result['recenttracks']['track'][0]['artist']['#text']
-    name = result['recenttracks']['track'][0]['name']
+    artist = result['recenttracks']['track'][limit - 1]['artist']['#text']
+    name = result['recenttracks']['track'][limit - 1]['name']
 
     track = (artist, name)
 
