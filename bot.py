@@ -5,6 +5,7 @@ import json
 import sqlite3
 import requests
 
+
 description = '''A bot for music sharing.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
@@ -72,6 +73,7 @@ async def npset(ctx, *lastfm_id):
 @bot.command(pass_context=True)
 async def np(ctx):
     """Gets current/last scrobbled track from Last.fm."""
+    user_id = ctx.message.author.id
 
     lastfm_id = get_user_from_db(user_id)
 
