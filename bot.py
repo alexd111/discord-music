@@ -4,9 +4,10 @@ import spotipy
 import json
 import sqlite3
 import requests
+import resource
 
 
-description = '''A music bot'''
+description = '''A bot for music sharing.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
 
@@ -20,6 +21,7 @@ async def on_ready():
 
 @bot.command()
 async def track(*details: str):
+    """Gets a track from Spotify and YouTube."""
     try:
         if '-' in details:
             hyphen_index = details.index('-')
@@ -44,6 +46,7 @@ async def track(*details: str):
 
 @bot.command()
 async def link(url: str):
+    """Converts either a YouTube or Spotify URL."""
     if 'spotify' in url:
         track_name = get_spotify_track_name_from_url(url)
         track_name_list = track_name.split(' - ')
@@ -59,6 +62,7 @@ async def link(url: str):
 
 @bot.command(pass_context=True)
 async def npset(ctx, *lastfm_id):
+    """Sets your Last.fm username. Must be done before !np can be used."""
     user_id = ctx.message.author.id
     lastfm_id = lastfm_id[0]
 
@@ -69,6 +73,8 @@ async def npset(ctx, *lastfm_id):
 
 @bot.command(pass_context=True)
 async def np(ctx):
+    """Gets current/last scrobbled track from Last.fm."""
+    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     user_id = ctx.message.author.id
 
     lastfm_id = get_user_from_db(user_id)
@@ -85,7 +91,11 @@ async def np(ctx):
 
     spotify_url = get_spotify_track(track[0], track[1])
 
+    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+
     youtube_url = get_youtube_track(track[0], track[1])
+
+    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
     await (bot.say(spotify_url + '\n' + youtube_url))
 
