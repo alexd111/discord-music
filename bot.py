@@ -4,8 +4,6 @@ import spotipy
 import json
 import sqlite3
 import requests
-import resource
-
 
 description = '''A bot for music sharing.'''
 bot = commands.Bot(command_prefix='!', description=description)
@@ -74,8 +72,6 @@ async def npset(ctx, *lastfm_id):
 @bot.command(pass_context=True)
 async def np(ctx):
     """Gets current/last scrobbled track from Last.fm."""
-    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    user_id = ctx.message.author.id
 
     lastfm_id = get_user_from_db(user_id)
 
@@ -91,11 +87,7 @@ async def np(ctx):
 
     spotify_url = get_spotify_track(track[0], track[1])
 
-    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-
     youtube_url = get_youtube_track(track[0], track[1])
-
-    print('Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
     await (bot.say(spotify_url + '\n' + youtube_url))
 
