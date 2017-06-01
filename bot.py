@@ -1,6 +1,7 @@
 from discord.ext import commands
 from googleapiclient.discovery import build
 import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 import json
 import sqlite3
 import requests
@@ -121,7 +122,7 @@ async def nplast(ctx):
 def get_spotify_track(artist: str, name: str):
     try:
         search_str = artist + " " + name
-        sp = spotipy.Spotify()
+        sp = spotipy.Spotify(client_credentials_manager=spotify_credentials)
         result = sp.search(search_str, 1)
         track_url = result['tracks']['items'][0]['external_urls']['spotify']
     except IndexError:
@@ -135,7 +136,7 @@ def get_spotify_track_name_from_url(url: str):
         url_list = url.split('/')
         spotify_uri = 'spotify:track:' + url_list[-1]
         search_str = spotify_uri
-        sp = spotipy.Spotify()
+        sp = spotipy.Spotify(client_credentials_manager=spotify_credentials)
         result = sp.track(spotify_uri)
 
         track_name = result['artists'][0]['name'] + ' - ' + result['name']
@@ -148,7 +149,7 @@ def get_spotify_track_name_from_url(url: str):
 def search_spotify(search: str):
     try:
         search_str = search
-        sp = spotipy.Spotify()
+        sp = spotipy.Spotify(client_credentials_manager=spotify_credentials)
         result = sp.search(search_str, 1)
         track_url = result['tracks']['items'][0]['external_urls']['spotify']
     except IndexError:
@@ -261,6 +262,12 @@ bot_token = config['BOT_TOKEN']
 youtube_token = config['YOUTUBE_KEY']
 
 lastfm_token = config['LASTFM_KEY']
+
+spotify_id = config['SPOTIFY_ID']
+
+spotify_secret = config['SPOTIFY_SECRET']
+
+spotify_credentials = SpotifyClientCredentials(client_id=spotify_id, client_secret=spotify_secret)
 
 initialise_db()
 
