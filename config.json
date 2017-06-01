@@ -1,6 +1,7 @@
 {
   "BOT_TOKEN": "",
-  "SPOTIFY_KEY": "",
+  "SPOTIFY_ID": "",
+  "SPOTIFY_SECRET": "",
   "YOUTUBE_KEY": "",
   "LASTFM_KEY": ""
 }
